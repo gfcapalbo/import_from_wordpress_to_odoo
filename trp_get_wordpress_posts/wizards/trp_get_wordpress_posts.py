@@ -21,8 +21,9 @@ class WpImportBlogPosts(models.TransientModel):
     @api.multi
     def import_posts(self):
         #'https://therp.nl/xmlrpc.php',
+        import
         try:
-            wpclient = WPClient(WP_LOC, WP_USR, WP_PWD)
+            wpclient = WPClient(self.WP_LOC, self.WP_USR, self.WP_PWD)
         except:
             sys.exit('connection failed')
 
@@ -38,13 +39,11 @@ class WpImportBlogPosts(models.TransientModel):
         tagmapping={}
         for term in terms:
             tagsearch=[('name', '=', term.name)]
-            existing_tags=sock.execute_kw(
-                    ODOO_DB,uid,ODOO_PWD,'blog.tag', 'search', [tagsearch])
+            existing_tags=self.env['blog.tag'].search(tagsearch)
             tagdict = {'name': term.name}
             #If a tag with that name exists please skip creation
             if not existing_tags:
-                newid = sock.execute_kw(
-                    ODOO_DB,uid,ODOO_PWD, 'blog.tag', 'create', [tagdict])
+                newid = self.env['blog.tag'].create(tagdict)
             else:
                 newid = existing_tags[0]
             tagmapping[term.id] = newid
@@ -52,17 +51,17 @@ class WpImportBlogPosts(models.TransientModel):
             tag_ids=[]
             for wp_tag_id in  post.struct['terms']['post_tag']:
                 tag_ids.append(tagmapping[str(wp_tag_id)])
-            bpdict = {}
-            bpdict['tag_ids'] = [[6, False, tag_ids]]
-            bpdict['blog_id'] = 1
-            bpdict['content'] = post.content
-            bpdict['write_date'] = post.date    
-            bpdict['create_uid'] = 1
-            bpdict['website_published'] = (post.post_status == 'publish')
-            bpdict['write_uid'] = 3    #imposing Anne's ID as creator
-            bpdict['name'] = post.title
-            bpdict['background_image_show'] = 'no_image'
+            bpdict = {
+                    'tag_ids':[[6, False, tag_ids]],
+                    'blog_id' : 1,
+                    'content' : post.content,
+                    'write_date' : post.date,
+                    'create_uid' : 1,
+                    'website_published' : (post.post_status == 'publish'),
+                    'write_uid' : 3,
+                    'name' : post.title,
+                    'background_image_show' : 'no_image'
+                }
             self.Env['blog.post'].create(bpdict)
-
 
 
