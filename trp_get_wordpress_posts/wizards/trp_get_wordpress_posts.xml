@@ -11,7 +11,6 @@
                 <form string="Procurement Request">
                     <p class="oe_gray">
                         Use this assistant to import all your wordpress blog posts in your new odoo website.
-
                     </p>
                     <group>
                         <field name="WP_USR" />
@@ -20,7 +19,7 @@
                         <field name="ODOO_USR" />
                         <i> Specify your odoo user id if you want the blogposts to be writen
                             under the name of that particular user </i>
-                            
+                    </group>        
                     <footer>
                         <button name="import_posts" string="Import Posts" type="object"  class="oe_highlight"  />
                         or

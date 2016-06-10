@@ -9,7 +9,7 @@ from wordpress_xmlrpc.methods import users as method_users
 
 class WpImportBlogPosts(models.TransientModel):
 
-    _name="wp.Import.blog.post"
+    _name="wp.import.blog.post"
     _description = 'import blogposts from wordpress'
 
     WP_USR=fields.Char('Wordpress User')
