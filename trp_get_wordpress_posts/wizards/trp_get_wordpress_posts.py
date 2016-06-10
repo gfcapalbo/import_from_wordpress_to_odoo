@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-from openerp import models, fields
+from openerp import api, fields, models
 from wordpress_xmlrpc import Client as WPClient
 from wordpress_xmlrpc.methods import posts as method_posts
 from wordpress_xmlrpc.methods import taxonomies as method_taxonomies 
