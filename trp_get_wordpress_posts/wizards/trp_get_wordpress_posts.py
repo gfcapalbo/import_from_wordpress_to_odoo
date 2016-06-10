@@ -18,7 +18,7 @@ class WpImportBlogPosts(models.TransientModel):
     ODOO_USR=fields.Char('Odoo User')
     ODOO_PWD=fields.Char('Odoo Pwd')
 
-
+    @api.multi
     def import_posts(self):
         #'https://therp.nl/xmlrpc.php',
         try:
