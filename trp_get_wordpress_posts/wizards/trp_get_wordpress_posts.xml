@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <!--  Make Procurement -->
+
+        <record id="view_import_wp_blogposts" model="ir.ui.view">
+            <field name="name">Import Wordpress blogposts</field>
+            <field name="model">wp.import.blog.post</field>
+            <field name="arch" type="xml">
+                <form string="Procurement Request">
+                    <p class="oe_gray">
+                        Use this assistant to import all your wordpress blog posts in your new odoo website.
+
+                    </p>
+                    <group>
+                        <field name="WP_USR" />
+                        <field name="WP_PWD" />
+                        <field name="WP_LOC" />
+                        <field name="ODOO_USR" />
+                        <i> Specify your odoo user id if you want the blogposts to be writen
+                            under the name of that particular user </i>
+                            
+                    <footer>
+                        <button name="import_posts" string="Import Posts" type="object"  class="oe_highlight"  />
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="act_import_wp_blogposts">
+            <field name="name">Inport Wordpress Blogposts</field>
+            <field name="res_model">wp.import.blog.post</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+
+        <menuitem 
+            name="Import From Wordpress" 
+            id="menu_import_wp" parent="website_blog.menu_wiki" 
+            sequence="20" />
+        <menuitem 
+            id="menu_import_wp_blogposts" 
+            parent="trp_get_wordpress_posts.menu_import_wp" 
+            name="Import Wordpress Blog Posts" 
+            action="act_import_wp_blogposts" sequence="20"/>
+
+    </data>
+</openerp>
