@@ -15,7 +15,7 @@ class WpImportBlogPosts(models.TransientModel):
     WP_USR=fields.Char('Wordpress User')
     WP_PWD=fields.Char('Wordpress password')
     WP_LOC=fields.Char('wordpress location')
-    ODOO_USR=fields.char('Odoo User')
+    ODOO_USR=fields.Char('Odoo User')
     ODOO_PWD=fields.Char('Odoo Pwd')
 
 
