@@ -25,6 +25,8 @@
     "category": "",
     "summary": "",
     "depends": [
+        'website',
+        'website_blog'
     ],
     "data": [
         'wizards/trp_get_wordpress_posts.xml',
