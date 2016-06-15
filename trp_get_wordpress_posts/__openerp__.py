@@ -31,14 +31,13 @@
     "data": [
         'wizards/trp_get_wordpress_posts.xml',
     ],
-    "qweb": [
-    ],
-    "test": [
-    ],
     "auto_install": False,
     "installable": True,
     "application": False,
     "external_dependencies": {
-        'python': [],
+        'python': [
+            'requests',
+            'wordpress_xmlrpc'
+            ],
     },
 }
