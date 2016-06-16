@@ -37,7 +37,6 @@
     "external_dependencies": {
         'python': [
             'requests',
-            'wordpress-xmlrpc'
             ],
     },
 }
