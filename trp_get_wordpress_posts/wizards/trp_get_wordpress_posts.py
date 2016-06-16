@@ -12,29 +12,61 @@ from openerp.tools import image_save_for_web
 
 
 class WordpressPageDump(models.Model):
-
     _name = "wp.pagedump"
     _description = 'Dump pages from wordpress'
 
+    origin_wp_site = fields.Many2one(
+            string='wp.wordpress site' , 
+            comodel_name='wp.wordpress.site')
+    imported_wp = fields.Boolean('Imported from wordpress')
     HtmlDump = fields.Html('Page_dump')
     Title = fields.Char('Title')
+
+
+class BlogPost(models.Model):
+    _inherit = 'blog.post'
+    origin_wp_site = fields.Many2one(
+            string='wp.wordpress site', 
+            comodel_name='wp.wordpress.site')
+    imported_wp = fields.Boolean('Imported from wordpress')
+
+class BlogTag(models.Model):
+    _inherit = 'blog.tag'
+    origin_wp_site = fields.Many2one(
+            string='wp.wordpress site', 
+            comodel_name='wp.wordpress.site')
+    imported_wp = fields.Boolean('Imported from wordpress')
+
+class IrAttachment(models.Model):
+    _inherit = 'ir.attachment'
+    origin_wp_site = fields.Many2one(
+            string='wp.wordpress site', 
+            comodel_name='wp.wordpress.site')
+    imported_wp = fields.Boolean('Imported from wordpress')
+
+class WordpressSite(models.Model):
+    _name = 'wp.wordpress.site'
+    _rec_name = 'WP_LOC'
+
+    WP_USR = fields.Char('Wordpress User', required=True)
+    WP_PWD = fields.Char('Wordpress password', required=True)
+    WP_LOC = fields.Char('wordpress location', required=True)
 
 
 class WpImportBlogPosts(models.TransientModel):
 
     _name = "wp.import.blog.post"
     _description = 'import blogposts from wordpress'
+    
+    WP_SITE = fields.Many2one(string='From site', comodel_name='wp.wordpress.site')
+    delete_old = fields.Boolean('Delete all prteviously imported data  from this wordpress website')
 
-    WP_USR = fields.Char('Wordpress User', required=True)
-    WP_PWD = fields.Char('Wordpress password', required=True)
-    WP_LOC = fields.Char('wordpress location', required=True)
-    ODOO_USR = fields.Char('Odoo User')
-    ODOO_PWD = fields.Char('Odoo Pwd')
-
+    
     @api.multi
     def get_all_images(self):
         try:
-            wpclient = WPClient(self.WP_LOC, self.WP_USR, self.WP_PWD)
+            wpclient = WPClient(
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
         except:
             sys.exit('connection failed')
         medialibrary = wpclient.call(method_media.GetMediaLibrary(
@@ -50,16 +82,26 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
                     'res_model': 'ir.ui.view',
+                    'origin_wp_site': self.WP_SITE.id,
+                    'imported_wp':True,
                 }
-            attachment_model.create(attachment_dict)
+            attachment_model.sudo().create(attachment_dict)
 
     @api.multi
     def import_posts(self):
         try:
-            wpclient = WPClient(self.WP_LOC, self.WP_USR, self.WP_PWD)
+            wpclient = WPClient(
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
         except:
             sys.exit('connection failed')
-
+        import pudb
+        pudb.set_trace()
+        #DELETE old tags, posts, and attacments.
+        if self.delete_old:
+           self.env['blog.post'].search([
+               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
+               ]).unlink()
+        
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
@@ -69,7 +111,7 @@ class WpImportBlogPosts(models.TransientModel):
                     'Title': key,
                     'HtmlDump': fetch_page.content
                     }
-            self.env['wp.pagedump'].create(page_dict)
+            self.env['wp.pagedump'].sudo().create(page_dict)
         taxonomies = wpclient.call(method_taxonomies.GetTaxonomies())
         for taxonomy in taxonomies:
             if taxonomy.name == 'post_tag':
@@ -83,7 +125,7 @@ class WpImportBlogPosts(models.TransientModel):
             tagdict = {'name': term.name}
             #If a tag with that name exists please skip creation
             if not existing_tags:
-                newid = self.env['blog.tag'].create(tagdict)
+                newid = self.env['blog.tag'].sudo().create(tagdict)
             else:
                 newid = existing_tags[0]
             tagmapping[term.id] = newid.id
@@ -98,8 +140,10 @@ class WpImportBlogPosts(models.TransientModel):
                     'write_date': post.date,
                     'website_published': (post.post_status == 'publish'),
                     'name': post.title or 'no_name',
+                    'origin_wp_site': self.WP_SITE.id,
+                    'imported_wp':True,
                 }
-            new_bp = self.env['blog.post'].create(bpdict)
+            new_bp = self.env['blog.post'].sudo().create(bpdict)
             #Get media library for this blogpost
             medialibrary = wpclient.call(method_media.GetMediaLibrary(
                 {'parent_id': post.id})
@@ -117,8 +161,10 @@ class WpImportBlogPosts(models.TransientModel):
                         'datas': fetched_file.content.encode('base64'),
                         'datas_fname': onlyname,
                         'res_model': 'ir.ui.view',
+                        'origin_wp_site': self.WP_SITE.id,
+                        'imported_wp':True,
                     }
-                    att = attachment_model.create(attachment_dict)
+                    att = attachment_model.sudo().create(attachment_dict)
                     replaced = new_bp.content.replace(
                         "http://therp.nl/wp-content/uploads/" + 
                         str(media.metadata['file']),
