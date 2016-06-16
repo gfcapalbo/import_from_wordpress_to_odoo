@@ -114,7 +114,7 @@ class WpImportBlogPosts(models.TransientModel):
             fetch_page = requests.get(page_path)
             page_dict={
                     'Title': key,
-                    'HtmlDump': fetch_page.content 
+                    'HtmlDump': fetch_page.content,
                     'imported_wp':True,
                     'origin_wp_site': self.WP_SITE.id,
                     }
