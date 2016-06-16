@@ -130,7 +130,7 @@ class WpImportBlogPosts(models.TransientModel):
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
             tagdict = {
-                    'name': term.name
+                    'name': term.name,
                     'origin_wp_site': self.WP_SITE.id,
                     'imported_wp':True,
                     }
