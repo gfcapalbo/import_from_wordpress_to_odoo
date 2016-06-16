@@ -83,7 +83,6 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas_fname': onlyname,
                     'res_model': 'ir.ui.view',
                     'origin_wp_site': self.WP_SITE.id,
-                    'imported_wp':True,
                 }
             attachment_model.sudo().create(attachment_dict)
 
@@ -94,14 +93,20 @@ class WpImportBlogPosts(models.TransientModel):
                 self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
         except:
             sys.exit('connection failed')
-        import pudb
-        pudb.set_trace()
         #DELETE old tags, posts, and attacments.
         if self.delete_old:
            self.env['blog.post'].search([
                ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ]).unlink()
-        
+               ]).sudo().unlink()
+           self.env['blog.tag'].search([
+               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
+               ]).sudo().unlink()
+           self.env['ir.attachment'].search([
+               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
+               ]).sudo().unlink()
+           self.env['wp.pagedump'].search([
+               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
+               ])sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
@@ -109,7 +114,9 @@ class WpImportBlogPosts(models.TransientModel):
             fetch_page = requests.get(page_path)
             page_dict={
                     'Title': key,
-                    'HtmlDump': fetch_page.content
+                    'HtmlDump': fetch_page.content 
+                    'imported_wp':True,
+                    'origin_wp_site': self.WP_SITE.id,
                     }
             self.env['wp.pagedump'].sudo().create(page_dict)
         taxonomies = wpclient.call(method_taxonomies.GetTaxonomies())
@@ -122,7 +129,11 @@ class WpImportBlogPosts(models.TransientModel):
         for term in terms:
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
-            tagdict = {'name': term.name}
+            tagdict = {
+                    'name': term.name
+                    'origin_wp_site': self.WP_SITE.id,
+                    'imported_wp':True,
+                    }
             #If a tag with that name exists please skip creation
             if not existing_tags:
                 newid = self.env['blog.tag'].sudo().create(tagdict)
