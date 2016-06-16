@@ -14,6 +14,7 @@ from openerp.tools import image_save_for_web
 class WordpressPageDump(models.Model):
 
     _name = "wp.pagedump"
+    -description = 'Dump pages from wordpress'
 
     HtmlDump = fields.Html('Page_dump')
     Title = fields.Char('Title')
@@ -58,6 +59,7 @@ class WpImportBlogPosts(models.TransientModel):
             wpclient = WPClient(self.WP_LOC, self.WP_USR, self.WP_PWD)
         except:
             sys.exit('connection failed')
+
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
