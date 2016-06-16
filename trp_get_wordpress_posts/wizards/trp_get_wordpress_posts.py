@@ -106,7 +106,7 @@ class WpImportBlogPosts(models.TransientModel):
                ]).sudo().unlink()
            self.env['wp.pagedump'].search([
                ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ])sudo().unlink()
+               ]).sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
