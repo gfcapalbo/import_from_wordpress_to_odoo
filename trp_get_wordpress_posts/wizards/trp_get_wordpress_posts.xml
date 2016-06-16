@@ -21,7 +21,7 @@
                             under the name of that particular user </i>
                     </group>        
                     <footer>
-                        <button name="Import_posts with their images" string="Import Posts" type="object"  class="oe_highlight"  />
+                        <button name="import_posts" string="Import Posts" type="object"  class="oe_highlight"  />
                         <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"  />
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
