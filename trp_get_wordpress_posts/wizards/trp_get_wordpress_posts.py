@@ -14,7 +14,7 @@ from openerp.tools import image_save_for_web
 class WordpressPageDump(models.Model):
 
     _name = "wp.pagedump"
-    -description = 'Dump pages from wordpress'
+    _description = 'Dump pages from wordpress'
 
     HtmlDump = fields.Html('Page_dump')
     Title = fields.Char('Title')
