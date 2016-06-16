@@ -6,7 +6,6 @@ from wordpress_xmlrpc.methods import posts as method_posts
 from wordpress_xmlrpc.methods import taxonomies as method_taxonomies 
 from wordpress_xmlrpc.methods import users as method_users 
 from wordpress_xmlrpc.methods import media as method_media
-import wget
 import requests
 from openerp.tools import image_save_for_web
 
