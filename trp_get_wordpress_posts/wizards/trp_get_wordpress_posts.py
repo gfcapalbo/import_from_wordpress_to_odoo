@@ -3,6 +3,7 @@ import sys, os
 from openerp import api, fields, models
 from wordpress_xmlrpc import Client as WPClient
 from wordpress_xmlrpc.methods import posts as method_posts
+from wordpress_xmlrpc.methods import pages as method_pages
 from wordpress_xmlrpc.methods import taxonomies as method_taxonomies 
 from wordpress_xmlrpc.methods import users as method_users 
 from wordpress_xmlrpc.methods import media as method_media
@@ -10,14 +11,22 @@ import requests
 from openerp.tools import image_save_for_web
 
 
+class WordpressPageDump(models.Model):
+
+    _name = "wp.pagedump"
+
+    HtmlDump = fields.Html('Page_dump')
+    Title = fields.Char('Title')
+
+
 class WpImportBlogPosts(models.TransientModel):
 
     _name = "wp.import.blog.post"
     _description = 'import blogposts from wordpress'
 
-    WP_USR = fields.Char('Wordpress User')
-    WP_PWD = fields.Char('Wordpress password')
-    WP_LOC = fields.Char('wordpress location')
+    WP_USR = fields.Char('Wordpress User', required=True)
+    WP_PWD = fields.Char('Wordpress password', required=True)
+    WP_LOC = fields.Char('wordpress location', required=True)
     ODOO_USR = fields.Char('Odoo User')
     ODOO_PWD = fields.Char('Odoo Pwd')
 
@@ -50,6 +59,15 @@ class WpImportBlogPosts(models.TransientModel):
         except:
             sys.exit('connection failed')
         posts = wpclient.call(method_posts.GetPosts())
+        pages = wpclient.call(method_pages.GetPageTemplates())
+        for key, value in pages.iteritems():
+            page_path='https://therp.nl/' + value
+            fetch_page = requests.get(page_path)
+            page_dict={
+                    'Title': key,
+                    'HtmlDump': fetch_page.content
+                    }
+            self.env['wp.pagedump'].create(page_dict)
         taxonomies = wpclient.call(method_taxonomies.GetTaxonomies())
         for taxonomy in taxonomies:
             if taxonomy.name == 'post_tag':

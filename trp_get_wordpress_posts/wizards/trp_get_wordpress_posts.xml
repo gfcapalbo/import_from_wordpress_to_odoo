@@ -2,7 +2,18 @@
 <openerp>
     <data>
 
-        <!--  Make Procurement -->
+        
+
+        <record id="view_wp_page_dumps" model="ir.ui.view">
+            <field name="name">Wordpress Page template dumps</field>
+            <field name="model">wp.pagedump</field>
+            <field name="arch" type="xml">
+                <tree string="Procurement Request">
+                        <field name="Title" />
+                        <field name="HtmlDump" />
+                </tree>
+            </field>
+        </record>
 
         <record id="view_import_wp_blogposts" model="ir.ui.view">
             <field name="name">Import Wordpress blogposts</field>
@@ -21,7 +32,8 @@
                             under the name of that particular user </i>
                     </group>        
                     <footer>
-                        <button name="import_posts" string="Import Posts" type="object"  class="oe_highlight"  />
+                        <button name="import_posts" string="Import Posts and Pagedumps" type="object"  class="oe_highlight"  />
+                        or
                         <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"  />
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
@@ -47,6 +59,19 @@
             parent="trp_get_wordpress_posts.menu_import_wp" 
             name="Import Wordpress Blog Posts" 
             action="act_import_wp_blogposts" sequence="20"/>
+        
+        <record model="ir.actions.act_window" id="act_view_page_dumps">
+            <field name="name">View wordpress page dumps</field>
+            <field name="res_model">wp.pagedump</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+        <menuitem 
+            id="menu_view_wp_page_dumps" 
+            parent="trp_get_wordpress_posts.menu_import_wp" 
+            name="View Page Dumps from wordpress" 
+            action="act_view_page_dumps" sequence="25"/>
+
 
     </data>
 </openerp>
