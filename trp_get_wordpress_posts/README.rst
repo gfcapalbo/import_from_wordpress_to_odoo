@@ -82,10 +82,18 @@ For further information, please visit:
 Known issues / Roadmap
 ======================
 
+Next features:
+
+0. Import Stats after import (added / deleted) and some feedback while importing
+
 1.Mapping of odoo users to wordpress users.
+
 2.Blog Thumbnail image.
+
 3.Show origin website in blogposts.
+
 4.Creation of one new blog per website instead of adding to default odoo blog.
+
 
 
 Bug Tracker
