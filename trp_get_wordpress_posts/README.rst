@@ -84,7 +84,7 @@ Known issues / Roadmap
 
 Next features:
 
-0. Import Stats after import (added / deleted) and some feedback while importing
+0.Import Stats after import (added / deleted) and some feedback while importing
 
 1.Mapping of odoo users to wordpress users.
 
