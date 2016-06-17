@@ -13,10 +13,11 @@ Installation
 
 DEPENDENCIES:
 
-This module depends on requests libtary (already installed if you have odoo installed)
+This module depends on requests library (already installed if you have odoo installed)
+
 and  python-wordpress-xmlrpc.
 
-    to install:
+    to install python-wordpress-xmlrpc:
 
     pip install python-wordpress-xmlrpc
 
