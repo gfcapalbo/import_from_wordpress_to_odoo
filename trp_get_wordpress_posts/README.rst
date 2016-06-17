@@ -62,8 +62,8 @@ so for a complete import , please specify a user with complete access to all dat
 
 All records will be created as odoo "Administrator".
 
-The "delete previously imported" will delete all older  assets fron that website (it will not delete assets from other
-websites.  If not selected the import will add duplicate records.
+The "delete previously imported" will delete all older assets fron that website (it will not delete assets from other
+websites).  If not selected the import will add duplicate records.
 
 
 
