@@ -25,7 +25,6 @@
                         <field name="WP_LOC" />
                         <field name="WP_USR" />
                         <field name="WP_PWD" password="True" />
-                        <field name="origin_wp_site"  />
                 </tree>
             </field>
         </record>

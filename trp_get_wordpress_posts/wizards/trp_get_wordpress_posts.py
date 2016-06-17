@@ -11,48 +11,6 @@ import requests
 from openerp.tools import image_save_for_web
 
 
-class WordpressPageDump(models.Model):
-    _name = "wp.pagedump"
-    _description = 'Dump pages from wordpress'
-
-    origin_wp_site = fields.Many2one(
-            string='wp.wordpress site' , 
-            comodel_name='wp.wordpress.site')
-    imported_wp = fields.Boolean('Imported from wordpress')
-    HtmlDump = fields.Html('Page_dump')
-    Title = fields.Char('Title')
-
-
-class BlogPost(models.Model):
-    _inherit = 'blog.post'
-    origin_wp_site = fields.Many2one(
-            string='wp.wordpress site', 
-            comodel_name='wp.wordpress.site')
-    imported_wp = fields.Boolean('Imported from wordpress')
-
-class BlogTag(models.Model):
-    _inherit = 'blog.tag'
-    origin_wp_site = fields.Many2one(
-            string='wp.wordpress site', 
-            comodel_name='wp.wordpress.site')
-    imported_wp = fields.Boolean('Imported from wordpress')
-
-class IrAttachment(models.Model):
-    _inherit = 'ir.attachment'
-    origin_wp_site = fields.Many2one(
-            string='wp.wordpress site', 
-            comodel_name='wp.wordpress.site')
-    imported_wp = fields.Boolean('Imported from wordpress')
-
-class WordpressSite(models.Model):
-    _name = 'wp.wordpress.site'
-    _rec_name = 'WP_LOC'
-
-    WP_USR = fields.Char('Wordpress User', required=True)
-    WP_PWD = fields.Char('Wordpress password', required=True)
-    WP_LOC = fields.Char('wordpress location', required=True)
-
-
 class WpImportBlogPosts(models.TransientModel):
 
     _name = "wp.import.blog.post"
