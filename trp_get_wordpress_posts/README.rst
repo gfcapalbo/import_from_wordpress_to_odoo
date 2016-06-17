@@ -1,7 +1,7 @@
 .. image:: https://img.shields.io/badge/licence-AGPL--3-blue.svg
     :alt: License: AGPL-3
 =======================
-trp_get_wordpress_posts
+Import from Wordpress website(s) to Odoo Website.
 =======================
 
 This module allows to import all information from one or many wordpress websites 
