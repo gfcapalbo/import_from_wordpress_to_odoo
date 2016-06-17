@@ -41,7 +41,8 @@ Every website must have:
 
 XMLRPC ACCESS:
 From wordpress 4.1 XMLRPC is enabled by default. If you have problems connecting please verify your address, 
-and also youe webserver settings, to be sure the page has not been blocked.
+and also your webserver settings, to be sure the page has not been blocked. Ask your Sysadmin if he/she disabled
+wordpress XMLRPC for security reasons.
 
 
 Usage
