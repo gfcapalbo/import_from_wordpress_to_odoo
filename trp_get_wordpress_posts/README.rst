@@ -29,11 +29,12 @@ Configuration
 In the menu "Knowledge>Import from wordpress" Choose Wordpress Websites to create the 
 connections to the websites you want to import.
 
-Every Website must have:
+Every website must have:
 
         Location: Location of your wordpress XMLRPC interface
                   Usually <MY COMPLETE WEBSITE ADDRESS>/xmlrpc.php
         Username: Wordpress Username
+        
         Password: Wordpress Password
 
 
