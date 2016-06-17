@@ -17,7 +17,7 @@ class WpImportBlogPosts(models.TransientModel):
     _description = 'import blogposts from wordpress'
     
     WP_SITE = fields.Many2one(string='From site', comodel_name='wp.wordpress.site')
-    delete_old = fields.Boolean('Delete all prteviously imported data  from this wordpress website')
+    delete_old = fields.Boolean('Delete all previously imported data  from this wordpress website')
 
     
     @api.multi
