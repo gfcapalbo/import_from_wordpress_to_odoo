@@ -5,8 +5,22 @@ trp_get_wordpress_posts
 =======================
 
 This module allows to import all information from one or many wordpress websites 
-into odoo.  (Blogposts with images and tagas, Image assets, Page PHP dumps
+into odoo.  (Blogposts with images and tags, Image assets, PHP page dumps)
 
+
+Installation
+============
+
+DEPENDENCIES:
+
+This module depends on requests libtary (already installed if you have odoo installed)
+and  python-wordpress-xmlrpc.
+
+    to install:
+
+    pip install python-wordpress-xmlrpc
+
+    (tested with version 2.3)
 
 
 Configuration
