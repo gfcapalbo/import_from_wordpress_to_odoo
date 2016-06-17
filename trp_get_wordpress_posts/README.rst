@@ -4,27 +4,54 @@
 trp_get_wordpress_posts
 =======================
 
-This module was written to extend the functionality of ... to support ...
-and allow you to ...
+This module allows to import all information from one or many wordpress websites 
+into odoo.  (Blogposts with images and tagas, Image assets, Page PHP dumps
 
-Installation
-============
 
-To install this module, you need to:
-
-* do this ...
 
 Configuration
 =============
 
-To configure this module, you need to:
+In the menu "Knowledge>Import from wordpress" Choose Wordpress Websites to create the 
+connections to the websites you want to import.
 
-* go to ...
+Every Website must have:
+
+        Location: Location of your wordpress XMLRPC interface
+                  Usually <MY COMPLETE WEBSITE ADDRESS>/xmlrpc.php
+        Username: Wordpress Username
+        Password: Wordpress Password
+
+
+XMLRPC ACCESS:
+From wordpress 4.1 XMLRPC is enabled by default. If you have problems connecting please verify your address, 
+and also youe webserver settings, to be sure the page has not been blocked.
+
 
 Usage
 =====
 
 To use this module, you need to:
+
+click on  "Import Wordpress Blog" to launch a wizard that will ask you to specify the website to import from and 
+if should delete all previously imported assets.
+
+It will import All blogposts with images (created as odoo website attachemtns) and 
+available in attachments dir) and tags. It will also create a dump of all wordpress
+page templates availiable in "wordpress pagedumps".
+
+
+IMPORTANT NOTES ON IMPORT:
+THe import will fetch only the records the specified user has the right to access in wordpress,
+so for a complete import , please specify a user with complete access to all data.
+
+All records will be created as odoo "Administrator".
+
+The "delete previously imported" will delete all older  assets fron that website (it will not delete assets from other
+websites.  If not selected the import will add duplicate records.
+
+
+
 
 * go to ...
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
@@ -40,7 +67,10 @@ For further information, please visit:
 Known issues / Roadmap
 ======================
 
-* ...
+Import of page structure.
+Mapping of odoo users to wordpress users.
+Blog Thumbnail image.
+
 
 Bug Tracker
 ===========
@@ -56,7 +86,7 @@ Credits
 Contributors
 ------------
 
-* Firstname Lastname <email.address@example.org>
+* Giovanni Francesco Capalbo  <giovanni@therp.nl>
 
 Maintainer
 ----------

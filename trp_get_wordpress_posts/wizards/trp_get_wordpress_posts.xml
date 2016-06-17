@@ -11,6 +11,7 @@
                 <tree string="Procurement Request">
                         <field name="Title" />
                         <field name="HtmlDump" />
+                        <field name="origin_wp_site"  />
                 </tree>
             </field>
         </record>
@@ -24,6 +25,7 @@
                         <field name="WP_LOC" />
                         <field name="WP_USR" />
                         <field name="WP_PWD" password="True" />
+                        <field name="origin_wp_site"  />
                 </tree>
             </field>
         </record>
@@ -48,6 +50,8 @@
                         <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"  />
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
+                        All imported records will be written as odoo "Administrator" We will introduce some form 
+                        of mapping between odoo users and wordpress users in a future version.
                     </footer>
                 </form>
             </field>
