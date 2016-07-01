@@ -9,24 +9,6 @@ from wordpress_xmlrpc.methods import users as method_users
 from wordpress_xmlrpc.methods import media as method_media
 import requests
 from openerp.tools import image_save_for_web
-import xmlrpclib, httplib
-
-
-class ProxiedTransport(xmlrpclib.Transport):
-    def set_proxy(self, proxy):
-        self.proxy = proxy
-
-    def make_connection(self, host):
-        self.realhost = host
-        h = httplib.HTTPConnection(self.proxy)
-        return h
-
-    def send_request(self, connection, handler, request_body):
-        connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
-
-    def send_host(self, connection, host):
-        connection.putheader('Host', self.realhost)
-
 
 class WpImportBlogPosts(models.TransientModel):
 
@@ -36,21 +18,7 @@ class WpImportBlogPosts(models.TransientModel):
     WP_SITE = fields.Many2one(string='From site', comodel_name='wp.wordpress.site')
     delete_old = fields.Boolean('Delete all previously imported data  from this wordpress website')
 
-    
-    @api.multi
-    def get_all_images(self):
-        try:
-            import pudb
-            pudb.set_trace()
-            p = ProxiedTransport()
-            p.set_proxy('therp.eu')
-            wpclient = WPClient(
-                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD, transport=p)
-        except:
-            sys.exit('connection failed')
-        medialibrary = wpclient.call(method_media.GetMediaLibrary(
-            {'parent_id': ''}))
-        for media in medialibrary:
+    def create_odoo_attachment(self, media):
             if 'file'in media.metadata:
                 filename = media.metadata['file']
                 onlyname = os.path.basename(filename)
@@ -60,18 +28,48 @@ class WpImportBlogPosts(models.TransientModel):
                     'name': onlyname,
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
-                    'res_model': 'ir.ui.view',
+                    'type': 'binary',
+                    'res_model': 'ir.ui.view',   #todo make it blog.post in case of thumbs
                     'origin_wp_site': self.WP_SITE.id,
+                    'is_thumbnail': False,
                 }
-            attachment_model.sudo().create(attachment_dict)
+            return attachment_model.sudo().create(attachment_dict)
 
+
+    def create_odoo_thumbnail(self, media):
+            if  media['metadata']['file']:
+                filename = media['metadata']['file']
+                onlyname = os.path.basename(filename)
+                fetched_file = requests.get(media['link'])
+                attachment_model = self.env['ir.attachment']
+                attachment_dict = {
+                    'name': onlyname,
+                    'datas': fetched_file.content.encode('base64'),
+                    'datas_fname': onlyname,
+                    'type': 'binary',
+                    'res_model': 'ir.ui.view',   #todo make it blog.post in case of thumbs
+                    'origin_wp_site': self.WP_SITE.id,
+                    'is_thumbnail': True,
+                }
+            return attachment_model.sudo().create(attachment_dict)
+
+    
+    @api.multi
+    def get_all_images(self):
+        try:
+            wpclient = WPClient(
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
+        except:
+            sys.exit('connection failed')
+        medialibrary = wpclient.call(method_media.GetMediaLibrary(
+            {'parent_id': ''}))
+        for media in medialibrary:
+            self.create_odoo_attachment(media)
     @api.multi
     def import_posts(self):
         try:
-            import pudb
-            pudb.set_trace()
             wpclient = WPClient(
-                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD, transport=specialHeader())
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD) 
         except:
             sys.exit('connection failed')
         #DELETE old tags, posts, and attacments.
@@ -90,6 +88,9 @@ class WpImportBlogPosts(models.TransientModel):
                ]).sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
+
+        import pudb
+        pudb.set_trace()
         for key, value in pages.iteritems():
             page_path = 'https://therp.nl/' + value
             fetch_page = requests.get(page_path)
@@ -106,7 +107,7 @@ class WpImportBlogPosts(models.TransientModel):
                 blogposts = taxonomy.name
         terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
         #create tags
-        tagmapping = {}
+        tag_ids = []
         for term in terms:
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
@@ -120,15 +121,7 @@ class WpImportBlogPosts(models.TransientModel):
                 newid = self.env['blog.tag'].sudo().create(tagdict)
             else:
                 newid = existing_tags[0]
-            tagmapping[term.id] = newid.id
-        for post in posts:
-            # get the thumbnail
-            import pudb
-            pudb.set_trace()
-            tag_ids = []
-            blog_thumbnail = post.struct['thumbnail']
-            for wp_tag_id in post.struct['terms']['post_tag']:
-                tag_ids.append(tagmapping[str(wp_tag_id)])
+            tag_ids.append(newid.id)
             bpdict = {
                     'tag_ids': [[6, False, tag_ids]],
                     'blog_id': 1,
@@ -138,8 +131,15 @@ class WpImportBlogPosts(models.TransientModel):
                     'name': post.title or 'no_name',
                     'origin_wp_site': self.WP_SITE.id,
                     'imported_wp': True,
-                    'thumbnail': blog_thumbnail
-                }
+                } 
+            for post in posts:
+                blog_thumbnail = post.struct['post_thumbnail']
+                if blog_thumbnail:
+                    try:
+                        blogpost_thumbnail = self.create_odoo_thumbnail(blog_thumbnail) 
+                        bpdict['thumbnail'] = blogpost_thumbnail.id,
+                    except:
+                        pass
             new_bp = self.env['blog.post'].sudo().create(bpdict)
             #Get media library for this blogpost
             medialibrary = wpclient.call(method_media.GetMediaLibrary(
@@ -149,19 +149,8 @@ class WpImportBlogPosts(models.TransientModel):
                 #import image
                 #get only files
                 if 'file'in media.metadata:
-                    filename = media.metadata['file']
-                    onlyname = os.path.basename(filename)
-                    fetched_file = requests.get(media.link)
-                    attachment_model = self.env['ir.attachment']
-                    attachment_dict = {
-                        'name': onlyname,
-                        'datas': fetched_file.content.encode('base64'),
-                        'datas_fname': onlyname,
-                        'res_model': 'ir.ui.view',
-                        'origin_wp_site': self.WP_SITE.id,
-                        'imported_wp':True,
-                    }
-                    att = attachment_model.sudo().create(attachment_dict)
+                    att = self.create_odoo_attachment(
+                        media) 
                     replaced = new_bp.content.replace(
                         "http://therp.nl/wp-content/uploads/" + 
                         str(media.metadata['file']),
@@ -169,4 +158,5 @@ class WpImportBlogPosts(models.TransientModel):
                         "/datas/"+str(media.metadata['height'])+
                         "x"+str(media.metadata['width'])
                     )
+                    #insert Thumbnail in blogpost content
                     new_bp.write({'content': replaced})            
