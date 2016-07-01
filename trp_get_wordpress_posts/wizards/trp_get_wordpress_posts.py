@@ -104,7 +104,6 @@ class WpImportBlogPosts(models.TransientModel):
                 blogposts = taxonomy.name
         terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
         #create tags
-        tag_ids = []
         for term in terms:
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
@@ -118,27 +117,30 @@ class WpImportBlogPosts(models.TransientModel):
                 newid = self.env['blog.tag'].sudo().create(tagdict)
             else:
                 newid = existing_tags[0]
-            tag_ids.append(newid.id)
-            for post in posts:
-                bpdict = {
-                        'tag_ids': [[6, False, tag_ids]],
-                        'blog_id': 1,
-                        'content': post.content,
-                        'write_date': post.date,
-                        'website_published': (post.post_status == 'publish'),
-                        'name': post.title or 'no_name',
-                        'origin_wp_site': self.WP_SITE.id,
-                        'imported_wp': True,
-                    } 
-                blog_thumbnail = post.struct['post_thumbnail']
-                if blog_thumbnail:
-                    try:
-                        blogpost_thumbnail = self.create_odoo_thumbnail(blog_thumbnail) 
-                        bpdict['thumbnail'] = blogpost_thumbnail.id,
-                    except:
-                        pass
+            tagmapping[term.id] = newid.id
+        for post in posts:
+            tag_ids = []
+            for wp_tag_id in post.struct['terms']['post_tag']:
+               tag_ids.append(tagmapping[str(wp_tag_id)])
+            bpdict = {
+                    'tag_ids': [[6, False, tag_ids]],
+                    'blog_id': 1,
+                    'content': post.content,
+                    'write_date': post.date,
+                    'website_published': (post.post_status == 'publish'),
+                    'name': post.title or 'no_name',
+                    'origin_wp_site': self.WP_SITE.id,
+                    'imported_wp': True,
+                } 
+            blog_thumbnail = post.struct['post_thumbnail']
+            if blog_thumbnail:
+                try:
+                    blogpost_thumbnail = self.create_odoo_thumbnail(blog_thumbnail) 
+                    bpdict['thumbnail'] = blogpost_thumbnail.id,
+                except:
+                    pass
             new_bp = self.env['blog.post'].sudo().create(bpdict)
-            #Get media library for this blogpost
+            # Get media library for this blogpost
             medialibrary = wpclient.call(method_media.GetMediaLibrary(
                 {'parent_id': post.id})
             )
