@@ -104,6 +104,7 @@ class WpImportBlogPosts(models.TransientModel):
                 blogposts = taxonomy.name
         terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
         #create tags
+        tagmapping={}
         for term in terms:
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
