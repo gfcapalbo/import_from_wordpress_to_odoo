@@ -88,9 +88,6 @@ class WpImportBlogPosts(models.TransientModel):
                ]).sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
-
-        import pudb
-        pudb.set_trace()
         for key, value in pages.iteritems():
             page_path = 'https://therp.nl/' + value
             fetch_page = requests.get(page_path)
