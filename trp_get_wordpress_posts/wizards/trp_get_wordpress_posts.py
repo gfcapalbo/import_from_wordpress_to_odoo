@@ -9,6 +9,23 @@ from wordpress_xmlrpc.methods import users as method_users
 from wordpress_xmlrpc.methods import media as method_media
 import requests
 from openerp.tools import image_save_for_web
+import xmlrpclib, httplib
+
+
+class ProxiedTransport(xmlrpclib.Transport):
+    def set_proxy(self, proxy):
+        self.proxy = proxy
+
+    def make_connection(self, host):
+        self.realhost = host
+        h = httplib.HTTPConnection(self.proxy)
+        return h
+
+    def send_request(self, connection, handler, request_body):
+        connection.putrequest("POST", 'http://%s%s' % (self.realhost, handler))
+
+    def send_host(self, connection, host):
+        connection.putheader('Host', self.realhost)
 
 
 class WpImportBlogPosts(models.TransientModel):
@@ -17,14 +34,18 @@ class WpImportBlogPosts(models.TransientModel):
     _description = 'import blogposts from wordpress'
     
     WP_SITE = fields.Many2one(string='From site', comodel_name='wp.wordpress.site')
-    delete_old = fields.Boolean('Delete all prteviously imported data  from this wordpress website')
+    delete_old = fields.Boolean('Delete all previously imported data  from this wordpress website')
 
     
     @api.multi
     def get_all_images(self):
         try:
+            import pudb
+            pudb.set_trace()
+            p = ProxiedTransport()
+            p.set_proxy('therp.eu')
             wpclient = WPClient(
-                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD, transport=p)
         except:
             sys.exit('connection failed')
         medialibrary = wpclient.call(method_media.GetMediaLibrary(
@@ -47,8 +68,10 @@ class WpImportBlogPosts(models.TransientModel):
     @api.multi
     def import_posts(self):
         try:
+            import pudb
+            pudb.set_trace()
             wpclient = WPClient(
-                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD, transport=specialHeader())
         except:
             sys.exit('connection failed')
         #DELETE old tags, posts, and attacments.
@@ -68,12 +91,12 @@ class WpImportBlogPosts(models.TransientModel):
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
-            page_path='https://therp.nl/' + value
+            page_path = 'https://therp.nl/' + value
             fetch_page = requests.get(page_path)
-            page_dict={
+            page_dict = {
                     'Title': key,
                     'HtmlDump': fetch_page.content,
-                    'imported_wp':True,
+                    'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
                     }
             self.env['wp.pagedump'].sudo().create(page_dict)
@@ -90,16 +113,20 @@ class WpImportBlogPosts(models.TransientModel):
             tagdict = {
                     'name': term.name,
                     'origin_wp_site': self.WP_SITE.id,
-                    'imported_wp':True,
+                    'imported_wp': True,
                     }
-            #If a tag with that name exists please skip creation
+            # If a tag with that name exists please skip creation
             if not existing_tags:
                 newid = self.env['blog.tag'].sudo().create(tagdict)
             else:
                 newid = existing_tags[0]
             tagmapping[term.id] = newid.id
         for post in posts:
+            # get the thumbnail
+            import pudb
+            pudb.set_trace()
             tag_ids = []
+            blog_thumbnail = post.struct['thumbnail']
             for wp_tag_id in post.struct['terms']['post_tag']:
                 tag_ids.append(tagmapping[str(wp_tag_id)])
             bpdict = {
@@ -110,7 +137,8 @@ class WpImportBlogPosts(models.TransientModel):
                     'website_published': (post.post_status == 'publish'),
                     'name': post.title or 'no_name',
                     'origin_wp_site': self.WP_SITE.id,
-                    'imported_wp':True,
+                    'imported_wp': True,
+                    'thumbnail': blog_thumbnail
                 }
             new_bp = self.env['blog.post'].sudo().create(bpdict)
             #Get media library for this blogpost
