@@ -1,7 +1,7 @@
 .. image:: https://img.shields.io/badge/licence-AGPL--3-blue.svg
     :alt: License: AGPL-3
 =======================
-trp_get_wordpress_posts
+Import from Wordpress website(s) to Odoo Website.
 =======================
 
 This module allows to import all information from one or many wordpress websites 
@@ -13,10 +13,11 @@ Installation
 
 DEPENDENCIES:
 
-This module depends on requests libtary (already installed if you have odoo installed)
+This module depends on requests library (already installed if you have odoo installed)
+
 and  python-wordpress-xmlrpc.
 
-    to install:
+    to install python-wordpress-xmlrpc:
 
     pip install python-wordpress-xmlrpc
 
@@ -29,17 +30,19 @@ Configuration
 In the menu "Knowledge>Import from wordpress" Choose Wordpress Websites to create the 
 connections to the websites you want to import.
 
-Every Website must have:
+Every website must have:
 
         Location: Location of your wordpress XMLRPC interface
                   Usually <MY COMPLETE WEBSITE ADDRESS>/xmlrpc.php
         Username: Wordpress Username
+        
         Password: Wordpress Password
 
 
 XMLRPC ACCESS:
 From wordpress 4.1 XMLRPC is enabled by default. If you have problems connecting please verify your address, 
-and also youe webserver settings, to be sure the page has not been blocked.
+and also your webserver settings, to be sure the page has not been blocked. Ask your Sysadmin if he/she disabled
+wordpress XMLRPC for security reasons.
 
 
 Usage
@@ -61,8 +64,8 @@ so for a complete import , please specify a user with complete access to all dat
 
 All records will be created as odoo "Administrator".
 
-The "delete previously imported" will delete all older  assets fron that website (it will not delete assets from other
-websites.  If not selected the import will add duplicate records.
+The "delete previously imported" will delete all older assets fron that website (it will not delete assets from other
+websites).  If not selected the import will add duplicate records.
 
 
 
@@ -81,10 +84,18 @@ For further information, please visit:
 Known issues / Roadmap
 ======================
 
+Next features:
+
+0.Import Stats after import (added / deleted) and some feedback while importing
+
 1.Mapping of odoo users to wordpress users.
+
 2.Blog Thumbnail image.
+
 3.Show origin website in blogposts.
+
 4.Creation of one new blog per website instead of adding to default odoo blog.
+
 
 
 Bug Tracker
