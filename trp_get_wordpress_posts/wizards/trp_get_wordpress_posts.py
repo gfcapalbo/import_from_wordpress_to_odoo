@@ -119,17 +119,17 @@ class WpImportBlogPosts(models.TransientModel):
             else:
                 newid = existing_tags[0]
             tag_ids.append(newid.id)
-            bpdict = {
-                    'tag_ids': [[6, False, tag_ids]],
-                    'blog_id': 1,
-                    'content': post.content,
-                    'write_date': post.date,
-                    'website_published': (post.post_status == 'publish'),
-                    'name': post.title or 'no_name',
-                    'origin_wp_site': self.WP_SITE.id,
-                    'imported_wp': True,
-                } 
             for post in posts:
+                bpdict = {
+                        'tag_ids': [[6, False, tag_ids]],
+                        'blog_id': 1,
+                        'content': post.content,
+                        'write_date': post.date,
+                        'website_published': (post.post_status == 'publish'),
+                        'name': post.title or 'no_name',
+                        'origin_wp_site': self.WP_SITE.id,
+                        'imported_wp': True,
+                    } 
                 blog_thumbnail = post.struct['post_thumbnail']
                 if blog_thumbnail:
                     try:
