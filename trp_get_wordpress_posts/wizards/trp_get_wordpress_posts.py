@@ -22,9 +22,7 @@ class WpImportBlogPosts(models.TransientModel):
             if 'file'in media.metadata:
                 filename = media.metadata['file']
                 onlyname = os.path.basename(filename)
-                import pudb
-                pudb.set_trace()
-                fetched_file = requests.get(media.link.replace('http', 'https', 1)
+                fetched_file = requests.get(media.link.replace('http', 'https', 1))
                 attachment_model = self.env['ir.attachment']
                 attachment_dict = {
                     'name': onlyname,
@@ -42,7 +40,7 @@ class WpImportBlogPosts(models.TransientModel):
             if  media['metadata']['file']:
                 filename = media['metadata']['file']
                 onlyname = os.path.basename(filename)
-                fetched_file = requests.get(media['link'])
+                fetched_file = requests.get(media['link'].replace('http', 'https', 1))
                 attachment_model = self.env['ir.attachment']
                 attachment_dict = {
                     'name': onlyname,
