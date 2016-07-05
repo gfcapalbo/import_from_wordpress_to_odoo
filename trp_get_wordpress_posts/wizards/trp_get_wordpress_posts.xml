@@ -36,7 +36,9 @@
             <field name="model">wp.import.blog.post</field>
             <field name="arch" type="xml">
                 <form string="Wordpress Import">
+
                     <p class="oe_gray">
+                        <br/>
                         Use this assistant to import all your wordpress blog posts in your new odoo website.
                     </p>
                     <group>

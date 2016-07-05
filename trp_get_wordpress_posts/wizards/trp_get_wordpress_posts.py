@@ -6,10 +6,8 @@ from wordpress_xmlrpc import Client as WPClient
 from wordpress_xmlrpc.methods import posts as method_posts
 from wordpress_xmlrpc.methods import pages as method_pages
 from wordpress_xmlrpc.methods import taxonomies as method_taxonomies 
-from wordpress_xmlrpc.methods import users as method_users 
 from wordpress_xmlrpc.methods import media as method_media
 import requests
-from openerp.tools import image_save_for_web
 
 class WpImportBlogPosts(models.TransientModel):
 
@@ -43,11 +41,11 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas_fname': onlyname,
                     'type': 'binary',
                     'res_model': 'ir.ui.view',   
+                    'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
                     'is_thumbnail': False,
                 }
             return self.env['ir.attachment'].sudo().create(attachment_dict)  
-
 
     def create_odoo_thumbnail(self, media):
             if media['metadata']['file']:
@@ -62,13 +60,13 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas_fname': onlyname,
                     'type': 'binary',
                     'res_model': 'ir.ui.view',   
-                    #todo make it blog.post in case of thumbs
+                    # todo make it blog.post in case of thumbs
+                    'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
                     'is_thumbnail': True,
                 }
             return self.env['ir.attachment'].sudo().create(attachment_dict)
 
-    
     @api.multi
     def get_all_images(self):
         try:
@@ -88,7 +86,7 @@ class WpImportBlogPosts(models.TransientModel):
                 self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD) 
         except:
             sys.exit('connection failed')
-        #DELETE old tags, posts, and attacments.
+        # DELETE old tags, posts, and attacments.
         if self.delete_old:
             self.env['blog.post'].search([
                 ('imported_wp', '=', True), 
@@ -123,7 +121,7 @@ class WpImportBlogPosts(models.TransientModel):
             if taxonomy.name == 'post_tag':
                 blogposts = taxonomy.name
         terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
-        #create tags
+        # create tags
         tagmapping = {}
         for term in terms:
             tagsearch = [('name', '=', term.name)]
@@ -175,7 +173,7 @@ class WpImportBlogPosts(models.TransientModel):
                     path_and_file = media.metadata['file']
                     onlyname = os.path.basename(path_and_file)
                     onlypath = self.replacelast(path_and_file, onlyname, '', 1)
-                    #try replacing main file in content
+                    # try replacing main file in content
                     source = "http://therp.nl/wp-content/uploads/" + \
                              onlypath + \
                              str(media.metadata['file'])
@@ -202,15 +200,10 @@ class WpImportBlogPosts(models.TransientModel):
                             "/website/image/ir.attachment/" + str(att.id) +
                             "/datas/" + height +
                             "x" + width)
-                else:
-                    import pudb
-                    pudb.set_trace()
-                    pass
-            if replaced != new_bp.content:
-                import pudb
-                pudb.set_trace()
-                from difflib import Differ
-                d = Differ()
-                result = list(d.compare(new_bp.content, replaced))
-                print result
-                new_bp.write({'content': replaced})            
+            # if post has a thumbnail , put it in the content
+            if blogpost_thumbnail:
+                replaced = "<img class=\"pull-left\"" + \
+                        "style = \"max-width: 164; margin: 5px 7px 5px 5px;\"" + \
+                           "src=\"/website/image/ir.attachment/" + \
+                           str(blogpost_thumbnail.id) + "/datas/\"/>" + replaced
+            new_bp.write({'content': replaced})            
