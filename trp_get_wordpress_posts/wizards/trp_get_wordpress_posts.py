@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import sys, os
+import sys
+import os
 from openerp import api, fields, models
 from wordpress_xmlrpc import Client as WPClient
 from wordpress_xmlrpc.methods import posts as method_posts
@@ -15,43 +16,57 @@ class WpImportBlogPosts(models.TransientModel):
     _name = "wp.import.blog.post"
     _description = 'import blogposts from wordpress'
     
-    WP_SITE = fields.Many2one(string='From site', comodel_name='wp.wordpress.site')
-    delete_old = fields.Boolean('Delete all previously imported data  from this wordpress website')
+    websitename_hardcoded = 'https://therp.nl/'
+
+    WP_SITE = fields.Many2one(
+        string='From site', comodel_name='wp.wordpress.site'
+    )
+    delete_old = fields.Boolean(
+        string='Delete all previously imported data'
+               'from this wordpress website'
+    )
+
+    def replacelast(self, s, old, new, how_many_from_last):
+        li = s.rsplit(old, how_many_from_last)
+        return new.join(li)
 
     def create_odoo_attachment(self, media):
             if 'file'in media.metadata:
                 filename = media.metadata['file']
                 onlyname = os.path.basename(filename)
-                fetched_file = requests.get(media.link.replace('http', 'https', 1))
-                attachment_model = self.env['ir.attachment']
+                fetched_file = requests.get(
+                    media.link.replace('http', 'https', 1)
+                )
                 attachment_dict = {
                     'name': onlyname,
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
                     'type': 'binary',
-                    'res_model': 'ir.ui.view',   #todo make it blog.post in case of thumbs
+                    'res_model': 'ir.ui.view',   
                     'origin_wp_site': self.WP_SITE.id,
                     'is_thumbnail': False,
                 }
-            return attachment_model.sudo().create(attachment_dict)
+            return self.env['ir.attachment'].sudo().create(attachment_dict)  
 
 
     def create_odoo_thumbnail(self, media):
-            if  media['metadata']['file']:
+            if media['metadata']['file']:
                 filename = media['metadata']['file']
                 onlyname = os.path.basename(filename)
-                fetched_file = requests.get(media['link'].replace('http', 'https', 1))
-                attachment_model = self.env['ir.attachment']
+                fetched_file = requests.get(
+                    media['link'].replace('http', 'https', 1)
+                )
                 attachment_dict = {
                     'name': onlyname,
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
                     'type': 'binary',
-                    'res_model': 'ir.ui.view',   #todo make it blog.post in case of thumbs
+                    'res_model': 'ir.ui.view',   
+                    #todo make it blog.post in case of thumbs
                     'origin_wp_site': self.WP_SITE.id,
                     'is_thumbnail': True,
                 }
-            return attachment_model.sudo().create(attachment_dict)
+            return self.env['ir.attachment'].sudo().create(attachment_dict)
 
     
     @api.multi
@@ -65,6 +80,7 @@ class WpImportBlogPosts(models.TransientModel):
             {'parent_id': ''}))
         for media in medialibrary:
             self.create_odoo_attachment(media)
+    
     @api.multi
     def import_posts(self):
         try:
@@ -74,22 +90,26 @@ class WpImportBlogPosts(models.TransientModel):
             sys.exit('connection failed')
         #DELETE old tags, posts, and attacments.
         if self.delete_old:
-           self.env['blog.post'].search([
-               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ]).sudo().unlink()
-           self.env['blog.tag'].search([
-               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ]).sudo().unlink()
-           self.env['ir.attachment'].search([
-               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ]).sudo().unlink()
-           self.env['wp.pagedump'].search([
-               ('imported_wp', '=', True), ('origin_wp_site', '=', self.WP_SITE.id)
-               ]).sudo().unlink()
+            self.env['blog.post'].search([
+                ('imported_wp', '=', True), 
+                ('origin_wp_site', '=', self.WP_SITE.id)
+                ]).sudo().unlink()
+            self.env['blog.tag'].search([
+                ('imported_wp', '=', True), 
+                ('origin_wp_site', '=', self.WP_SITE.id)
+                ]).sudo().unlink()
+            self.env['ir.attachment'].search([
+                ('imported_wp', '=', True), 
+                ('origin_wp_site', '=', self.WP_SITE.id)
+                ]).sudo().unlink()
+            self.env['wp.pagedump'].search([
+                ('imported_wp', '=', True), 
+                ('origin_wp_site', '=', self.WP_SITE.id)
+                ]).sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
-            page_path = 'https://therp.nl/' + value
+            page_path = self.websitename_hardcoded + value
             fetch_page = requests.get(page_path)
             page_dict = {
                     'Title': key,
@@ -104,7 +124,7 @@ class WpImportBlogPosts(models.TransientModel):
                 blogposts = taxonomy.name
         terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
         #create tags
-        tagmapping={}
+        tagmapping = {}
         for term in terms:
             tagsearch = [('name', '=', term.name)]
             existing_tags = self.env['blog.tag'].search(tagsearch)
@@ -122,7 +142,7 @@ class WpImportBlogPosts(models.TransientModel):
         for post in posts:
             tag_ids = []
             for wp_tag_id in post.struct['terms']['post_tag']:
-               tag_ids.append(tagmapping[str(wp_tag_id)])
+                tag_ids.append(tagmapping[str(wp_tag_id)])
             bpdict = {
                     'tag_ids': [[6, False, tag_ids]],
                     'blog_id': 1,
@@ -136,27 +156,61 @@ class WpImportBlogPosts(models.TransientModel):
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
                 try:
-                    blogpost_thumbnail = self.create_odoo_thumbnail(blog_thumbnail) 
+                    blogpost_thumbnail = self.create_odoo_thumbnail(
+                        blog_thumbnail
+                    ) 
                     bpdict['thumbnail'] = blogpost_thumbnail.id,
                 except:
                     pass
             new_bp = self.env['blog.post'].sudo().create(bpdict)
             # Get media library for this blogpost
-
             medialibrary = wpclient.call(method_media.GetMediaLibrary(
                 {'parent_id': post.id})
             )
+            replaced = new_bp.content
             for media in medialibrary:
-                #import image
-                #get only files
                 if 'file'in media.metadata:
                     att = self.create_odoo_attachment(
-                        media) 
-                    replaced = new_bp.content.replace(
-                        "http://therp.nl/wp-content/uploads/" + 
-                        str(media.metadata['file']),
-                        "/website/image/ir.attachment/"+str(att.id)+
-                        "/datas/"+str(media.metadata['height'])+
-                        "x"+str(media.metadata['width'])
-                    )
-                    new_bp.write({'content': replaced})            
+                        media)
+                    path_and_file = media.metadata['file']
+                    onlyname = os.path.basename(path_and_file)
+                    onlypath = self.replacelast(path_and_file, onlyname, '', 1)
+                    #try replacing main file in content
+                    source = "http://therp.nl/wp-content/uploads/" + \
+                             onlypath + \
+                             str(media.metadata['file'])
+                    height = str(media.metadata['height'])
+                    width = str(media.metadata['width'])
+                    replaced = replaced.replace(
+                        source,
+                        "/website/image/ir.attachment/" + str(att.id) +
+                        "/datas/" + height +
+                        "x" + width)
+                    """
+                    we do not know wich size will be passed so try them all 
+                    by iterating all size keys, including thumbnails
+                    """
+                    if 'sizes' in media.metadata:
+                        for size in media.metadata['sizes']:
+                            source = "http://therp.nl/wp-content/uploads/" + \
+                                     onlypath + \
+                                     str(media.metadata['sizes'][size]['file'])
+                            height = str(media.metadata['sizes'][size]['height'])
+                            width = str(media.metadata['sizes'][size]['width'])
+                        replaced = replaced.replace(
+                            source,
+                            "/website/image/ir.attachment/" + str(att.id) +
+                            "/datas/" + height +
+                            "x" + width)
+                else:
+                    import pudb
+                    pudb.set_trace()
+                    pass
+            if replaced != new_bp.content:
+                import pudb
+                pudb.set_trace()
+                from difflib import Differ
+                d = Differ()
+                result = list(d.compare(new_bp.content, replaced))
+                print result
+                new_bp.write({'content': replaced})            
