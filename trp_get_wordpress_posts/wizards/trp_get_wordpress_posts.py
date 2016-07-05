@@ -154,6 +154,8 @@ class WpImportBlogPosts(models.TransientModel):
                     # info for the website_blog_teaser module
                     'display_type': 'teaser',
                     'extract_auto': True,
+                    # info for website_blog_no_background_image
+                    'background_image_show' : 'no_image'
                 }
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
@@ -171,9 +173,6 @@ class WpImportBlogPosts(models.TransientModel):
             )
             replaced = new_bp.content
             for media in medialibrary:
-                if replaced.find('wp-content') > -1:
-                    import pudb
-                    pudb.set_trace()
                 if 'file'in media.metadata:
                     att = self.create_odoo_attachment(
                         media)
