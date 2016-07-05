@@ -5,7 +5,7 @@ from openerp import api, fields, models
 from wordpress_xmlrpc import Client as WPClient
 from wordpress_xmlrpc.methods import posts as method_posts
 from wordpress_xmlrpc.methods import pages as method_pages
-from wordpress_xmlrpc.methods import taxonomies as method_taxonomies 
+from wordpress_xmlrpc.methods import taxonomies as method_taxonomies
 from wordpress_xmlrpc.methods import media as method_media
 import requests
 
@@ -13,7 +13,7 @@ class WpImportBlogPosts(models.TransientModel):
 
     _name = "wp.import.blog.post"
     _description = 'import blogposts from wordpress'
-    
+
     websitename_hardcoded = 'https://therp.nl/'
 
     WP_SITE = fields.Many2one(
@@ -40,12 +40,12 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
                     'type': 'binary',
-                    'res_model': 'ir.ui.view',   
+                    'res_model': 'ir.ui.view',
                     'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
                     'is_thumbnail': False,
                 }
-            return self.env['ir.attachment'].sudo().create(attachment_dict)  
+            return self.env['ir.attachment'].sudo().create(attachment_dict)
 
     def create_odoo_thumbnail(self, media):
             if media['metadata']['file']:
@@ -59,7 +59,7 @@ class WpImportBlogPosts(models.TransientModel):
                     'datas': fetched_file.content.encode('base64'),
                     'datas_fname': onlyname,
                     'type': 'binary',
-                    'res_model': 'ir.ui.view',   
+                    'res_model': 'ir.ui.view',
                     # todo make it blog.post in case of thumbs
                     'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
@@ -78,30 +78,30 @@ class WpImportBlogPosts(models.TransientModel):
             {'parent_id': ''}))
         for media in medialibrary:
             self.create_odoo_attachment(media)
-    
+
     @api.multi
     def import_posts(self):
         try:
             wpclient = WPClient(
-                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD) 
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
         except:
             sys.exit('connection failed')
         # DELETE old tags, posts, and attacments.
         if self.delete_old:
             self.env['blog.post'].search([
-                ('imported_wp', '=', True), 
+                ('imported_wp', '=', True),
                 ('origin_wp_site', '=', self.WP_SITE.id)
                 ]).sudo().unlink()
             self.env['blog.tag'].search([
-                ('imported_wp', '=', True), 
+                ('imported_wp', '=', True),
                 ('origin_wp_site', '=', self.WP_SITE.id)
                 ]).sudo().unlink()
             self.env['ir.attachment'].search([
-                ('imported_wp', '=', True), 
+                ('imported_wp', '=', True),
                 ('origin_wp_site', '=', self.WP_SITE.id)
                 ]).sudo().unlink()
             self.env['wp.pagedump'].search([
-                ('imported_wp', '=', True), 
+                ('imported_wp', '=', True),
                 ('origin_wp_site', '=', self.WP_SITE.id)
                 ]).sudo().unlink()
         posts = wpclient.call(method_posts.GetPosts())
@@ -153,13 +153,13 @@ class WpImportBlogPosts(models.TransientModel):
                     #info for the website_blog_teaser module
                     'display_type': 'teaser',
                     'extract_auto': True,
-                } 
+                }
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
                 try:
                     blogpost_thumbnail = self.create_odoo_thumbnail(
                         blog_thumbnail
-                    ) 
+                    )
                     bpdict['thumbnail'] = blogpost_thumbnail.id,
                 except:
                     pass
@@ -188,7 +188,7 @@ class WpImportBlogPosts(models.TransientModel):
                         "/datas/" + height +
                         "x" + width)
                     """
-                    we do not know wich size will be passed so try them all 
+                    we do not know wich size will be passed so try them all
                     by iterating all size keys, including thumbnails
                     """
                     if 'sizes' in media.metadata:
@@ -205,8 +205,10 @@ class WpImportBlogPosts(models.TransientModel):
                                 "x" + width)
             # if post has a thumbnail , put it in the content at the beginning
             if blogpost_thumbnail:
-                replaced = "<img class=\"pull-left\"" + \
-                        "style = \"max-width: 164; margin: 5px 7px 5px 5px;\"" + \
-                        "src=\"/website/image/ir.attachment/" + \
-                         str(blogpost_thumbnail.id) + "/datas/\"/>" + replaced
-            new_bp.write({'content': replaced})            
+                replaced = ("<img class=\"pull-left\""
+                        "style = \"max-width: %s;"
+                        "margin: 5px 7px 5px 5px;\""
+                        "src=\"/website/image/ir.attachment/%s/datas/\"/> %s"
+                        ) % (str(new_bp.blog_id.thumbnail_width),
+                              str(blogpost_thumbnail.id),  replaced)
+            new_bp.write({'content': replaced})
