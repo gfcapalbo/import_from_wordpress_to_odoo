@@ -9,6 +9,7 @@ from wordpress_xmlrpc.methods import taxonomies as method_taxonomies
 from wordpress_xmlrpc.methods import media as method_media
 import requests
 
+
 class WpImportBlogPosts(models.TransientModel):
 
     _name = "wp.import.blog.post"
@@ -150,7 +151,7 @@ class WpImportBlogPosts(models.TransientModel):
                     'name': post.title or 'no_name',
                     'origin_wp_site': self.WP_SITE.id,
                     'imported_wp': True,
-                    #info for the website_blog_teaser module
+                    # info for the website_blog_teaser module
                     'display_type': 'teaser',
                     'extract_auto': True,
                 }
@@ -170,6 +171,9 @@ class WpImportBlogPosts(models.TransientModel):
             )
             replaced = new_bp.content
             for media in medialibrary:
+                if replaced.find('wp-content') > -1:
+                    import pudb
+                    pudb.set_trace()
                 if 'file'in media.metadata:
                     att = self.create_odoo_attachment(
                         media)
@@ -178,8 +182,7 @@ class WpImportBlogPosts(models.TransientModel):
                     onlypath = self.replacelast(path_and_file, onlyname, '', 1)
                     # try replacing main file in content
                     source = "http://therp.nl/wp-content/uploads/" + \
-                             onlypath + \
-                             str(media.metadata['file'])
+                        path_and_file
                     height = str(media.metadata['height'])
                     width = str(media.metadata['width'])
                     replaced = replaced.replace(
@@ -193,22 +196,19 @@ class WpImportBlogPosts(models.TransientModel):
                     """
                     if 'sizes' in media.metadata:
                         for size in media.metadata['sizes']:
-                            source = "http://therp.nl/wp-content/uploads/" + \
-                                     onlypath + \
-                                     str(media.metadata['sizes'][size]['file'])
-                            height = str(media.metadata['sizes'][size]['height'])
-                            width = str(media.metadata['sizes'][size]['width'])
-                            replaced = replaced.replace(
-                                source,
-                                "/website/image/ir.attachment/" + str(att.id) +
-                                "/datas/" + height +
-                                "x" + width)
-            # if post has a thumbnail , put it in the content at the beginning
-            if blogpost_thumbnail:
-                replaced = ("<img class=\"pull-left\""
-                        "style = \"max-width: %s;"
-                        "margin: 5px 7px 5px 5px;\""
-                        "src=\"/website/image/ir.attachment/%s/datas/\"/> %s"
-                        ) % (str(new_bp.blog_id.thumbnail_width),
-                              str(blogpost_thumbnail.id),  replaced)
+                            if size != 'thumbnail':
+                                source = ("http://therp.nl/wp-content/"
+                                          "uploads/%s%s") % (
+                                              onlypath,
+                                              str(media.metadata['sizes'][size]['file'])
+                                            )
+                                height = str(
+                                    media.metadata['sizes'][size]['height']
+                                )
+                                width = str(media.metadata['sizes'][size]['width'])
+                                replaced = replaced.replace(
+                                    source,
+                                    "/website/image/ir.attachment/" + str(att.id) +
+                                    "/datas/" + height +
+                                    "x" + width)
             new_bp.write({'content': replaced})
