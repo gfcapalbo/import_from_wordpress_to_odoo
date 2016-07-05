@@ -150,6 +150,9 @@ class WpImportBlogPosts(models.TransientModel):
                     'name': post.title or 'no_name',
                     'origin_wp_site': self.WP_SITE.id,
                     'imported_wp': True,
+                    #info for the website_blog_teaser module
+                    'display_type': 'teaser',
+                    'extract_auto': True,
                 } 
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
@@ -195,15 +198,15 @@ class WpImportBlogPosts(models.TransientModel):
                                      str(media.metadata['sizes'][size]['file'])
                             height = str(media.metadata['sizes'][size]['height'])
                             width = str(media.metadata['sizes'][size]['width'])
-                        replaced = replaced.replace(
-                            source,
-                            "/website/image/ir.attachment/" + str(att.id) +
-                            "/datas/" + height +
-                            "x" + width)
-            # if post has a thumbnail , put it in the content
+                            replaced = replaced.replace(
+                                source,
+                                "/website/image/ir.attachment/" + str(att.id) +
+                                "/datas/" + height +
+                                "x" + width)
+            # if post has a thumbnail , put it in the content at the beginning
             if blogpost_thumbnail:
                 replaced = "<img class=\"pull-left\"" + \
                         "style = \"max-width: 164; margin: 5px 7px 5px 5px;\"" + \
-                           "src=\"/website/image/ir.attachment/" + \
-                           str(blogpost_thumbnail.id) + "/datas/\"/>" + replaced
+                        "src=\"/website/image/ir.attachment/" + \
+                         str(blogpost_thumbnail.id) + "/datas/\"/>" + replaced
             new_bp.write({'content': replaced})            

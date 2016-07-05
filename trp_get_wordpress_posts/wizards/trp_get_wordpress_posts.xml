@@ -51,6 +51,7 @@
                         <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"  />
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
+                        <br/>
                         All imported records will be written as odoo "Administrator" We will introduce some form 
                         of mapping between odoo users and wordpress users in a future version.
                     </footer>
