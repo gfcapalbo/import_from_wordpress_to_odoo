@@ -214,7 +214,7 @@ class WpImportBlogPosts(models.TransientModel):
                                     "/datas/" + height +
                                     "x" + width)
             new_bp.write({'content': replaced})
-            # update date
+            # update date with wordpress
             SQL = "UPDATE blog_post set create_date = '%s' where id = %s" % (
                 post.date, new_bp.id)
             self.env.cr.execute(SQL)
