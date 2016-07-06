@@ -152,6 +152,7 @@ class WpImportBlogPosts(models.TransientModel):
                     # info for the website_blog_teaser module
                     'display_type': 'teaser',
                     'extract_auto': True,
+                    'subtitle': ' ',
                     # info for website_blog_no_background_image
                     'background_image_show': 'no_image'
                 }
