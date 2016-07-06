@@ -44,7 +44,6 @@ class WpImportBlogPosts(models.TransientModel):
                     'res_model': 'ir.ui.view',
                     'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
-                    'is_thumbnail': False,
                 }
             return self.env['ir.attachment'].sudo().create(attachment_dict)
 
@@ -64,7 +63,6 @@ class WpImportBlogPosts(models.TransientModel):
                     # todo make it blog.post in case of thumbs
                     'imported_wp': True,
                     'origin_wp_site': self.WP_SITE.id,
-                    'is_thumbnail': True,
                 }
             return self.env['ir.attachment'].sudo().create(attachment_dict)
 
@@ -155,7 +153,7 @@ class WpImportBlogPosts(models.TransientModel):
                     'display_type': 'teaser',
                     'extract_auto': True,
                     # info for website_blog_no_background_image
-                    'background_image_show' : 'no_image'
+                    'background_image_show': 'no_image'
                 }
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
@@ -196,18 +194,27 @@ class WpImportBlogPosts(models.TransientModel):
                     if 'sizes' in media.metadata:
                         for size in media.metadata['sizes']:
                             if size != 'thumbnail':
-                                source = ("http://therp.nl/wp-content/"
-                                          "uploads/%s%s") % (
-                                              onlypath,
-                                              str(media.metadata['sizes'][size]['file'])
-                                            )
+                                source = (
+                                    "http://therp.nl/wp-content/"
+                                    "uploads/%s%s"
+                                    ) % (
+                                        onlypath,
+                                        str(media.metadata['sizes'][size]['file'])
+                                        )
                                 height = str(
                                     media.metadata['sizes'][size]['height']
                                 )
-                                width = str(media.metadata['sizes'][size]['width'])
+                                width = str(
+                                    media.metadata['sizes'][size]['width']
+                                )
                                 replaced = replaced.replace(
                                     source,
-                                    "/website/image/ir.attachment/" + str(att.id) +
+                                    "/website/image/ir.attachment/" + 
+                                    str(att.id) +
                                     "/datas/" + height +
                                     "x" + width)
             new_bp.write({'content': replaced})
+            # update date
+            SQL = "UPDATE blog_post set create_date = '%s' where id = %s" % (
+                post.date, new_bp.id)
+            self.env.cr.execute(SQL)
