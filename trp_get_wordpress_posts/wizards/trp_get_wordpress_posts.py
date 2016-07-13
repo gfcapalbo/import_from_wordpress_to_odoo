@@ -247,7 +247,7 @@ class WpImportBlogPosts(models.TransientModel):
                     'background_image_show': 'no_image'
                 }
 
-            author = self['wp.user'].search([(
+            author = self.env['wp.user'].search([(
                 'wp_id', '=', int(post.user.id))])[0]
             if author.associated_odoo_partner:
                 # if there is an association put it in the dict, otherwise
