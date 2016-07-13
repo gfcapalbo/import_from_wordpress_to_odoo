@@ -136,7 +136,7 @@ class WpImportBlogPosts(models.TransientModel):
             if self.delete_old:
                 self.env['wp.user'].search([
                     ('origin_wp_site', '=', self.WP_SITE.id)]).sudo().unlink()
-            self.env['wp.user'].create(user_dict)
+            self.env['wp.user'].sudo().create(user_dict)
 
 
     @api.multi
