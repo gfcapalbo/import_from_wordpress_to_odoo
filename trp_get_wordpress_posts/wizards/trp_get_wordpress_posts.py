@@ -103,7 +103,7 @@ class WpImportBlogPosts(models.TransientModel):
                 ('imported_wp', '=', True),
                 ('origin_wp_site', '=', self.WP_SITE.id)
                 ]).sudo().unlink()
-        posts = wpclient.call(method_posts.GetPosts())
+
         pages = wpclient.call(method_pages.GetPageTemplates())
         for key, value in pages.iteritems():
             page_path = self.websitename_hardcoded + value
@@ -136,10 +136,39 @@ class WpImportBlogPosts(models.TransientModel):
             else:
                 newid = existing_tags[0]
             tagmapping[term.id] = newid.id
+        """
+        forced to use this when counting blog posts
+        there is a broken/malformed post in our wordpress that 
+        returns an error and blocks the whole import
+        We are forced to get them one by one in a try/except
+        so we can skip the failures, that means slower performance
+        but more stable import
+        """
+        offset = 0
+        number = 1
+        post_num = 0
+        wp_bp_id_list = []
+        while True:
+            postcount = wpclient.call(method_posts.GetPosts(
+                {'number': number, 'offset': offset}))
+            if len(postcount) == 0:
+                break
+            offset += 1
+            post_num += number
+            wp_bp_id_list.append(int(postcount[0].id))
+        posts = []
+        for pst_id in wp_bp_id_list:
+            try:
+                posts.append(
+                    wpclient.call(method_posts.GetPost(pst_id))
+                )
+            except:
+                continue
         for post in posts:
             tag_ids = []
-            for wp_tag_id in post.struct['terms']['post_tag']:
-                tag_ids.append(tagmapping[str(wp_tag_id)])
+            if 'post_tag' in post.struct['terms']:
+                for wp_tag_id in post.struct['terms']['post_tag']:
+                    tag_ids.append(tagmapping[str(wp_tag_id)])
             bpdict = {
                     'tag_ids': [[6, False, tag_ids]],
                     'blog_id': 1,
@@ -214,7 +243,7 @@ class WpImportBlogPosts(models.TransientModel):
                                     str(att.id) +
                                     "/datas/" + height +
                                     "x" + width)
-            new_bp.write({'content': replaced})
+                    new_bp.write({'content': replaced})
             # update date with wordpress
             SQL = "UPDATE blog_post set create_date = '%s' where id = %s" % (
                 post.date, new_bp.id)
