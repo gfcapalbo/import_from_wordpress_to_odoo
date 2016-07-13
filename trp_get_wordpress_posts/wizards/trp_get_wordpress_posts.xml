@@ -17,7 +17,7 @@
         </record>
 
 
-        <record id="view_wp_wevbsites" model="ir.ui.view">
+        <record id="view_wp_websites" model="ir.ui.view">
             <field name="name">Wordpress websites</field>
             <field name="model">wp.wordpress.site</field>
             <field name="arch" type="xml">
@@ -29,6 +29,24 @@
             </field>
         </record>
 
+
+        <record id="view_wp_users" model="ir.ui.view">
+            <field name="name">Wordpress to Odoo user mapping</field>
+            <field name="model">wp.user</field>
+            <field name="arch" type="xml">
+                <!-- TODO default filter group by websites -->
+                <tree string="Users">
+                        <field name="wp_id" />
+                        <field name="wp_nicename" />
+                        <field name="wp_nickname" />
+                        <field name="wp_display_name"/>
+                        <field name="wp_first_name" />
+                        <field name="wp_last_name" />
+                        <field name="wp_email" />
+                        <field name="associated_odoo_partner" />
+                </tree>
+            </field>
+        </record>
 
 
         <record id="view_import_wp_blogposts" model="ir.ui.view">
@@ -46,9 +64,13 @@
                         <field name="delete_old" />
                     </group>        
                     <footer>
-                        <button name="import_posts" string="Import Posts and Pagedumps" type="object"  class="oe_highlight"  />
-                        or
-                        <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"  />
+                        step 1 - import users
+                        <br/>
+                        <button name="import_users" string="Import Wordpress Users" type="object" class="oe_highlight"/>
+                        <br/>
+                        <br/>
+                        <button name="import_posts" string="Import Posts and Pagedumps" type="object"  class="oe_highlight"/>
+                        <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"/>
                         or
                         <button string="Cancel" class="oe_link" special="cancel" />
                         <br/>
@@ -60,7 +82,7 @@
         </record>
 
         <record model="ir.actions.act_window" id="act_import_wp_blogposts">
-            <field name="name">Inport Wordpress Blogposts</field>
+            <field name="name">Import Wordpress Blogposts</field>
             <field name="res_model">wp.import.blog.post</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
@@ -80,11 +102,28 @@
                 Wordpress site</field>
         </record>
 
+        
+        <record model="ir.actions.act_window" id="act_wordpress_users">
+            <field name="name">Wordpress users</field>
+            <field name="res_model">wp.user</field>
+            <field name="view_mode">tree</field>
+            <field name="help"> Use this view to associate your Wordpress site(s) user to a corresponding Odoo user, 
+                when you import blogposts the correct associated author will appear if a wp user remains unassociated, all the posts
+            made by that user will be default "Administrator" user.</field>
+        </record>
+
+
         <menuitem 
             id="menu_wp_sites" 
             parent="trp_get_wordpress_posts.menu_import_wp" 
             name="Wordpress Websites" 
             action="act_wordpress_websites" sequence="20"/>
+
+        <menuitem 
+            id="menu_wp_users" 
+            parent="trp_get_wordpress_posts.menu_import_wp" 
+            name="Wordpress Users" 
+            action="act_wordpress_users" sequence="20"/>
 
         <menuitem 
             id="menu_import_wp_blogposts" 
@@ -103,7 +142,6 @@
             parent="trp_get_wordpress_posts.menu_import_wp" 
             name="View Page Dumps from wordpress" 
             action="act_view_page_dumps" sequence="18"/>
-
 
     </data>
 </openerp>

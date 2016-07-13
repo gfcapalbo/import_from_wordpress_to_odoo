@@ -7,6 +7,7 @@ from wordpress_xmlrpc.methods import posts as method_posts
 from wordpress_xmlrpc.methods import pages as method_pages
 from wordpress_xmlrpc.methods import taxonomies as method_taxonomies
 from wordpress_xmlrpc.methods import media as method_media
+from wordpress_xmlrpc.methods import users as method_users
 import requests
 
 
@@ -77,6 +78,26 @@ class WpImportBlogPosts(models.TransientModel):
             {'parent_id': ''}))
         for media in medialibrary:
             self.create_odoo_attachment(media)
+
+    @api.multi
+    def import_users(self): 
+        try:
+            wpclient = WPClient(
+                self.WP_SITE.WP_LOC, self.WP_SITE.WP_USR, self.WP_SITE.WP_PWD)
+        except:
+            sys.exit('connection failed')
+        users = wpclient.call(method_users.GetUsers(fields=['all']))
+        for user in users:
+            self.env['wp.user'].create(
+                {'origin_wp_site': self.WP_SITE.id,
+                 'wp_id': user.id,
+                 'wp_nicename': user.nicename,
+                 'wp_nickname': user.nickname,
+                 'wp_display_name': user.display_name,
+                 'wp_first_name': user.first_name,
+                 'wp_last_name': user.last_name, 
+                 'wp_email': user.email, }
+                )
 
     @api.multi
     def import_posts(self):
