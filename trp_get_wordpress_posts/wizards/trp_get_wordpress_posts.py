@@ -246,10 +246,10 @@ class WpImportBlogPosts(models.TransientModel):
                     # info for website_blog_no_background_image
                     'background_image_show': 'no_image'
                 }
-
-            author = self.env['wp.user'].search([(
-                'wp_id', '=', int(post.user.id))])[0]
-            if author.associated_odoo_partner:
+            if post.user:
+                author = self.env['wp.user'].search([(
+                    'wp_id', '=', int(post.user))])
+            if author and author.associated_odoo_partner:
                 # if there is an association put it in the dict, otherwise
                 # module defaults to Administrator
                 bpdict['author_id'] = author.associated_odoo_partner.id
