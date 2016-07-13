@@ -35,7 +35,7 @@
             <field name="model">wp.user</field>
             <field name="arch" type="xml">
                 <!-- TODO default filter group by websites -->
-                <tree string="Users">
+                <tree string="Users" editable="top">
                         <field name="wp_id" />
                         <field name="wp_nicename" />
                         <field name="wp_nickname" />
@@ -64,18 +64,23 @@
                         <field name="delete_old" />
                     </group>        
                     <footer>
-                        step 1 - import users
-                        <br/>
                         <button name="import_users" string="Import Wordpress Users" type="object" class="oe_highlight"/>
                         <br/>
                         <br/>
-                        <button name="import_posts" string="Import Posts and Pagedumps" type="object"  class="oe_highlight"/>
-                        <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"/>
-                        or
+                        <!--        <group   attrs="{'invisible': ['|', ('users_imported', '=' , False),('users_associated', '=', False) ]}">
+                        -->
+                        <button name="import_posts" string="Import Posts and Pagedumps" type="object"  class="oe_highlight" 
+                                />
+                            <button name="get_all_images" string="Import all images as attachments" type="object"  class="oe_highlight"
+                                />
+                            <!-- </group> -->
+                            <br/>
+                            <br/>
+                            <!--
+                            <p attrs="{'invisible': [('users_imported', '=' , False)]}"> Please import your users, all other import options will appear after that. </p>
+                            <p attrs="{'invisible': [('users_associated', '=' , False)]}"> You have imported your wordpress users, please go to "Wordpress Users" menu and associate some or all of these users to odoo users , then relaunch this wizard </p>
+                            -->
                         <button string="Cancel" class="oe_link" special="cancel" />
-                        <br/>
-                        All imported records will be written as odoo "Administrator" We will introduce some form 
-                        of mapping between odoo users and wordpress users in a future version.
                     </footer>
                 </form>
             </field>

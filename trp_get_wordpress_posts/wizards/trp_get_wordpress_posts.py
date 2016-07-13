@@ -19,12 +19,47 @@ class WpImportBlogPosts(models.TransientModel):
     websitename_hardcoded = 'https://therp.nl/'
 
     WP_SITE = fields.Many2one(
-        string='From site', comodel_name='wp.wordpress.site'
+        string='From site', comodel_name='wp.wordpress.site', 
+        required=True
     )
     delete_old = fields.Boolean(
         string='Delete all previously imported data'
                'from this wordpress website'
     )
+
+    # TODO this would improve wizard interface suggesting correct order, FIX
+    """
+    @api.multi
+    def get_user_association_status(self):
+        # will turn true as soon as there is 
+        # an odoo associated user not null on some user
+        # that indicates that the user has reviewed odoo-wp 
+        # association
+        for this in self:
+            this.users_associated = len(
+                self.env['wp.user'].search(
+                    [('origin_wp_site', '='. this.WP_SITE.id)]).filtered(
+                       lambda x: len(x.associated_odoo_partner.ids) > 0)
+                ) > 0
+    @api.multi
+    def get_user_import_status(self):
+        
+        #    if there are wp.users associated to the current website
+        for this in self:
+            this.users_associated = len(
+                self.env['wp.user'].search(
+                    [('origin_wp_site', '='. this.WP_SITE.id)])
+                ) > 0
+
+    users_imported = fields.Boolean(
+        string='Initial user import has been done', 
+        compute=get_user_import_status
+    )
+    users_associated = fields.Boolean(
+        string="Some Users have been associated", 
+        compute=get_user_association_status
+    )
+    """
 
     def replacelast(self, s, old, new, how_many_from_last):
         li = s.rsplit(old, how_many_from_last)
@@ -88,16 +123,21 @@ class WpImportBlogPosts(models.TransientModel):
             sys.exit('connection failed')
         users = wpclient.call(method_users.GetUsers(fields=['all']))
         for user in users:
-            self.env['wp.user'].create(
-                {'origin_wp_site': self.WP_SITE.id,
-                 'wp_id': user.id,
-                 'wp_nicename': user.nicename,
-                 'wp_nickname': user.nickname,
-                 'wp_display_name': user.display_name,
-                 'wp_first_name': user.first_name,
-                 'wp_last_name': user.last_name, 
-                 'wp_email': user.email, }
-                )
+            user_dict = {
+                'origin_wp_site': self.WP_SITE.id,
+                'wp_id': user.id,
+                'wp_nicename': user.nicename,
+                'wp_nickname': user.nickname,
+                'wp_display_name': user.display_name,
+                'wp_first_name': user.first_name,
+                'wp_last_name': user.last_name, 
+                'wp_email': user.email, 
+                }
+            if self.delete_old:
+                self.env['wp.user'].search([
+                    ('origin_wp_site', '=', self.WP_SITE.id)]).sudo().unlink()
+            self.env['wp.user'].create(user_dict)
+
 
     @api.multi
     def import_posts(self):
@@ -206,6 +246,13 @@ class WpImportBlogPosts(models.TransientModel):
                     # info for website_blog_no_background_image
                     'background_image_show': 'no_image'
                 }
+
+            author = self['wp.user'].search([(
+                'wp_id', '=', int(post.user.id))])[0]
+            if author.associated_odoo_partner:
+                # if there is an association put it in the dict, otherwise
+                # module defaults to Administrator
+                bpdict['author_id'] = author.associated_odoo_partner.id
             blog_thumbnail = post.struct['post_thumbnail']
             if blog_thumbnail:
                 try:
