@@ -24,11 +24,11 @@ class WpImportBlogPosts(models.TransientModel):
     )
     delete_old = fields.Boolean(
         string='Delete all previously imported data'
-               'from this wordpress website'
+               ' from this wordpress website'
     )
 
-    # TODO this would improve wizard interface suggesting correct order, FIX
     @api.multi
+    @api.depends('WP_SITE', 'users_imported')
     def get_user_association_status(self):
         # will turn true as soon as there is 
         # an odoo associated user not null on some user
@@ -37,17 +37,19 @@ class WpImportBlogPosts(models.TransientModel):
         for this in self:
             this.users_associated = len(
                 self.env['wp.user'].search(
-                    [('origin_wp_site', '='. this.WP_SITE.id)]).filtered(
+                    [('origin_wp_site', '=', this.WP_SITE.id)]).filtered(
                        lambda x: len(x.associated_odoo_partner.ids) > 0)
                 ) > 0
+
     @api.multi
+    @api.depends('WP_SITE')
     def get_user_import_status(self):
         
         #    if there are wp.users associated to the current website
         for this in self:
             this.users_imported = len(
                 self.env['wp.user'].search(
-                    [('origin_wp_site', '='. this.WP_SITE.id)])
+                    [('origin_wp_site', '=', this.WP_SITE.id)])
                 ) > 0
 
     users_imported = fields.Boolean(
@@ -62,6 +64,7 @@ class WpImportBlogPosts(models.TransientModel):
     def replacelast(self, s, old, new, how_many_from_last):
         li = s.rsplit(old, how_many_from_last)
         return new.join(li)
+
 
     def create_odoo_attachment(self, media):
             if 'file'in media.metadata:
