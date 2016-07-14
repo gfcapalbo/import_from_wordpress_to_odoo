@@ -28,7 +28,6 @@ class WpImportBlogPosts(models.TransientModel):
     )
 
     # TODO this would improve wizard interface suggesting correct order, FIX
-    """
     @api.multi
     def get_user_association_status(self):
         # will turn true as soon as there is 
@@ -46,7 +45,7 @@ class WpImportBlogPosts(models.TransientModel):
         
         #    if there are wp.users associated to the current website
         for this in self:
-            this.users_associated = len(
+            this.users_imported = len(
                 self.env['wp.user'].search(
                     [('origin_wp_site', '='. this.WP_SITE.id)])
                 ) > 0
@@ -59,7 +58,6 @@ class WpImportBlogPosts(models.TransientModel):
         string="Some Users have been associated", 
         compute=get_user_association_status
     )
-    """
 
     def replacelast(self, s, old, new, how_many_from_last):
         li = s.rsplit(old, how_many_from_last)
