@@ -75,7 +75,7 @@
                             </ul>
                         </b> </p>  
                         <separator/>
-                        <button name="import_users"  attrs="{'invisible': [('users_imported', '=' , True)]}" string="Import Wordpress Users" type="object" class="oe_highlight"/>
+                        <button name="import_users"  string="Import Wordpress Users" type="object" class="oe_highlight"/>
                         <br/>
                         <br/>
 
