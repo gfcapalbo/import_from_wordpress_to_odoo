@@ -178,10 +178,16 @@ class WpImportBlogPosts(models.TransientModel):
                     }
             self.env['wp.pagedump'].sudo().create(page_dict)
         taxonomies = wpclient.call(method_taxonomies.GetTaxonomies())
+        """
+        useless, once we know taxonomies just fetch them
         for taxonomy in taxonomies:
             if taxonomy.name == 'post_tag':
                 blogposts = taxonomy.name
-        terms = wpclient.call(method_taxonomies.GetTerms(blogposts))
+            if taxonomy.name == 'category':
+        """
+        terms = wpclient.call(method_taxonomies.GetTerms('post_tag'))
+        categories = wpclient.call(method_taxonomies.GetTerms('category'))
+        postformats =  wpclient.call(method_taxonomies.GetTerms('post_format'))
         # create tags
         tagmapping = {}
         for term in terms:
@@ -198,6 +204,23 @@ class WpImportBlogPosts(models.TransientModel):
             else:
                 newid = existing_tags[0]
             tagmapping[term.id] = newid.id
+        # create categories
+        catmapping = {}
+        for category in categories:
+            catsearch = [('name', '=', category.name)]
+            existing_cats = self.env['blog.category'].search(catsearch)
+            catdict = {
+                    'name': category.name,
+                    'origin_wp_site': self.WP_SITE.id,
+                    'imported_wp': True,
+                    }
+            # If a tag with that name exists please skip creation
+            if not existing_cats:
+                newid = self.env['blog.category'].sudo().create(catdict)
+            else:
+                newid = existing_cats[0]
+            catmapping[category.id] = newid.id
+            
         """
         forced to use this when counting blog posts
         there is a broken/malformed post in our wordpress that 
@@ -228,12 +251,18 @@ class WpImportBlogPosts(models.TransientModel):
                 continue
         for post in posts:
             tag_ids = []
+            cat_ids = []
             if 'post_tag' in post.struct['terms']:
                 for wp_tag_id in post.struct['terms']['post_tag']:
                     tag_ids.append(tagmapping[str(wp_tag_id)])
+            if 'category' in post.struct['terms']:
+                for wp_cat_id in post.struct['terms']['category']:
+                    cat_ids.append(catmapping[str(wp_cat_id)])
+            blogs = self.env['blog.blog'].search([])
             bpdict = {
                     'tag_ids': [[6, False, tag_ids]],
-                    'blog_id': 1,
+                    'category_id': [[6, False, cat_ids]],
+                    'blog_id': blogs[0].id,
                     'content': post.content,
                     'write_date': post.date,
                     'website_published': (post.post_status == 'publish'),
