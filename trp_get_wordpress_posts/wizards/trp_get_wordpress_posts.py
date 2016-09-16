@@ -273,6 +273,8 @@ class WpImportBlogPosts(models.TransientModel):
                     'display_type': 'teaser',
                     'extract_auto': True,
                     'subtitle': ' ',
+                    # getting teaser from excerpt in wordpress
+                    'teaser': post.excerpt,
                     # info for website_blog_no_background_image
                     'background_image_show': 'no_image'
                 }
