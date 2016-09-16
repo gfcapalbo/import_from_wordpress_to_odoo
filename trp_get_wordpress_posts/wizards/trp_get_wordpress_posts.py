@@ -9,7 +9,7 @@ from wordpress_xmlrpc.methods import taxonomies as method_taxonomies
 from wordpress_xmlrpc.methods import media as method_media
 from wordpress_xmlrpc.methods import users as method_users
 import requests
-
+import logging
 
 class WpImportBlogPosts(models.TransientModel):
 
@@ -233,6 +233,7 @@ class WpImportBlogPosts(models.TransientModel):
         number = 1
         post_num = 0
         wp_bp_id_list = []
+        _logger = logging.getLogger(__name__)
         while True:
             postcount = wpclient.call(method_posts.GetPosts(
                 {'number': number, 'offset': offset}))
@@ -259,6 +260,7 @@ class WpImportBlogPosts(models.TransientModel):
                 for wp_cat_id in post.struct['terms']['category']:
                     cat_ids.append(catmapping[str(wp_cat_id)])
             blogs = self.env['blog.blog'].search([])
+            _logger.info("excerpt %s" ,  str(post.excerpt))
             bpdict = {
                     'tag_ids': [[6, False, tag_ids]],
                     'category_id': [[6, False, cat_ids]],
@@ -271,10 +273,10 @@ class WpImportBlogPosts(models.TransientModel):
                     'imported_wp': True,
                     # info for the website_blog_teaser module
                     'display_type': 'teaser',
-                    'extract_auto': True,
+                    'extract_auto': False,
                     'subtitle': ' ',
                     # getting teaser from excerpt in wordpress
-                    'teaser': post.excerpt,
+                    'teaser': str(post.excerpt),
                     # info for website_blog_no_background_image
                     'background_image_show': 'no_image'
                 }
