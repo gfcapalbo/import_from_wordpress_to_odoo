@@ -8,7 +8,7 @@ class wp_user(models.Model):
     _name = 'wp.user'
 
     associated_odoo_partner = fields.Many2one(
-        comodel_name='res.users', 
+        comodel_name='res.partner', 
         string="Associated odoo user"
     )
     wp_id = fields.Integer(string="Wordpress id", readonly=True)
